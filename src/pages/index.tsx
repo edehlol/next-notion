@@ -2,11 +2,16 @@ import Head from "next/head";
 import Image from "next/image";
 import { Inter } from "next/font/google";
 import styles from "@/styles/Home.module.css";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/router";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  const supabase = useSupabaseClient();
+  const session = useSession();
+
   return (
     <>
       <Head>
@@ -16,7 +21,22 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        <button>log in</button>
+        {session ? (
+          <button onClick={async () => supabase.auth.signOut()}>logout</button>
+        ) : (
+          <button
+            onClick={async () =>
+              await supabase.auth.signInWithOAuth({
+                provider: "notion",
+                options: {
+                  redirectTo: `${process.env.NEXT_PUBLIC_URL}/auth/redirect`,
+                },
+              })
+            }
+          >
+            log in
+          </button>
+        )}
       </main>
     </>
   );
